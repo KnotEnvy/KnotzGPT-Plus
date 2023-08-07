@@ -1,7 +1,9 @@
 const DashboardPage = () =>{
   return (
-    <p>Dashboard Page Yuuuh!! (protected)
-    </p>
+    <div>
+        <p>Dashboard Page Yuuuh!! (protected)</p>
+
+    </div>
     
   )
 }
