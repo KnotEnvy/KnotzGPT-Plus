@@ -1,7 +1,57 @@
 "use client";
 
+import { Montserrat } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
+
+import { cn } from "@/lib/utils";
+import { ViewGridIcon, ChatBubbleIcon, ImageIcon, VideoIcon, SpeakerLoudIcon, CodeIcon, InfoCircledIcon  } from "@radix-ui/react-icons"
+const montserrat = Montserrat({ weight: "600", subsets: ["latin"]});
+
+const routes = [
+    {
+    label: "Dashboard",
+    icon: ViewGridIcon,
+    href:"/dashboard",
+    color:"text-sky-500",
+    },
+    {
+    label: "Conversational AI",
+    icon: ChatBubbleIcon,
+    href:"/conversation",
+    color:"text-violet-500",
+    },
+    {
+    label: "Image Gen AI",
+    icon: ImageIcon,
+    href:"/image",
+    color:"text-pink-700",
+    },
+    {
+    label: "Vid Gen AI",
+    icon: VideoIcon,
+    href:"/video",
+    color:"text-orange-700",
+    },
+    {
+    label: "Music Gen AI",
+    icon: SpeakerLoudIcon,
+    href:"/music",
+    color:"text-emerald-500",
+    },
+    {
+    label: "Code Gen AI",
+    icon: CodeIcon,
+    href:"/code",
+    color:"text-green-700",
+    },
+    {
+    label: "Settings",
+    icon: InfoCircledIcon,
+    href:"/settings",
+
+    },
+];
 
 const Sidebar = () => {
     return (
@@ -13,11 +63,28 @@ const Sidebar = () => {
                             fill
                             alt="Logo"
                             src="/Hacklogo.png"
-                        
                         />
-
                     </div>
+                    <h1 className={cn("text-2xl font-bold", montserrat.className)}>
+                        KnotzGPT
+                    </h1>
                 </Link>
+                <div className="space-y-1">
+                    {routes.map((route) => (
+                        <Link
+                            href={route.href}
+                            key={route.href}
+                            className="text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition "
+                        >
+                            <div className="flex items-center flex-1">
+                                <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
+                                {route.label}
+
+                            </div>
+                        </Link>
+                    ))}
+
+                </div>
 
             </div>
         </div>
