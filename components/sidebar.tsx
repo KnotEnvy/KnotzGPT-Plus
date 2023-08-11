@@ -7,6 +7,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ViewGridIcon, ChatBubbleIcon, ImageIcon, VideoIcon, SpeakerLoudIcon, CodeIcon, InfoCircledIcon  } from "@radix-ui/react-icons"
 import { usePathname } from "next/navigation"
+import { FreeCounter } from "@/components/free-counter";
 const montserrat = Montserrat({ weight: "600", subsets: ["latin"]});
 
 const routes = [
@@ -54,7 +55,13 @@ const routes = [
     },
 ];
 
-const Sidebar = () => {
+interface SidebarProps {
+    apiLimitCount: number
+};
+
+const Sidebar = ({ 
+    apiLimitCount = 0
+}: SidebarProps) => {
     const pathname = usePathname();
     return (
         <div className="space-y-4 py-4 flex flex-col h-full bg-[#111827] text-white">
@@ -68,7 +75,7 @@ const Sidebar = () => {
                         />
                     </div>
                     <h1 className={cn("text-2xl font-bold", montserrat.className)}>
-                        KnotzGPT
+                        KnotzGPT+
                     </h1>
                 </Link>
                 <div className="space-y-1">
@@ -90,6 +97,9 @@ const Sidebar = () => {
                 </div>
 
             </div>
+            <FreeCounter 
+                apiLimitCount={apiLimitCount}
+            />
         </div>
     )
 }
