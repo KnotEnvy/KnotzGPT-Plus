@@ -3,7 +3,7 @@
 import axios from "axios"
 import * as z from "zod"
 import { Heading } from "@/components/heading";
-import { ChatBubbleIcon } from "@radix-ui/react-icons";
+import { ChatBubbleIcon, SpeakerLoudIcon, VideoIcon } from "@radix-ui/react-icons";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { formSchema } from "./constants";
@@ -12,16 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChatCompletionRequestMessage } from "openai";
+
 import { Empty } from "@/components/empty";
 import { Loader } from "@/components/loader";
-import { cn } from "@/lib/utils";
-import { UserAvatar } from "@/components/user-avatar";
-import { BotAvatar } from "@/components/bot-avatar";
 
-const ConversationPage = () => {
+
+
+const VideoPage = () => {
     const router = useRouter();
-    const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
+    const [video, setVideo] = useState<string>();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -34,18 +33,11 @@ const ConversationPage = () => {
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
-            const userMessage: ChatCompletionRequestMessage = {
-                role: "user",
-                content: values.prompt,
-            };
-            const newMessages = [...messages, userMessage];
+            setVideo(undefined);
             
-            const response = await axios.post("/api/conversation", {
-                messages: newMessages,
-            });
-
-            setMessages((current) => [...current, userMessage, response.data]);
-
+            const response = await axios.post("/api/video", values)
+                
+            setVideo(response.data[0])
             form.reset();
         } catch (error: any) {
             // TODO: Open Pro Model
@@ -58,11 +50,11 @@ const ConversationPage = () => {
     return (
         <div>
             <Heading 
-                title="Conversation"
-                description="The most expertly trained conversation model."
-                icon={ChatBubbleIcon}
-                iconColor="text-violet-500"
-                bgColor="bg-violet-500/10"
+                title="Video Generation"
+                description="Enter a prompt and watch a video."
+                icon={VideoIcon}
+                iconColor="text-orange-700"
+                bgColor="bg-orange-700/10"
             />
             <div className="px-4 lg:px-8">
                 <div>
@@ -80,7 +72,7 @@ const ConversationPage = () => {
                                             <Input 
                                                 className="border-0 outline-none focus-visable:ring-0 focus-visible:ring-transparent"
                                                 disabled={isLoading}
-                                                placeholder="Give me 5 marketing ideas..."
+                                                placeholder="Video of a bear riding bike..."
                                                 {...field}
                                             />
                                         </FormControl>
@@ -99,30 +91,18 @@ const ConversationPage = () => {
                             <Loader />
                         </div>
                     )}
-                    {messages.length === 0 && !isLoading && (
-                        <Empty label="No conversation started."/>
+                    {!video && !isLoading && (
+                        <Empty label="No video generated."/>
                     )}
-                    <div className="flex flex-col-reverse gap-y-4">
-                        {messages.map((message) => (
-                            <div                             
-                            key={message.content}
-                            className={cn("p-8 w-full flex items-start gap-x-8 rounded-lg", 
-                                        message.role === "user" ? "bg-white border border-black/10" : "bg-muted" 
-                            )}
-                            >
-                                {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-                                <p className="text-sm">
-
-                                {message.content}
-                                </p>
-                            </div>
-                        ))}
-
-                    </div>
+                    {video && (
+                        <video className="w-full aspect-video mt-8 rounded-lg border bg-black" controls>
+                            <source src={video}/>
+                        </video>
+                    )}
                 </div>
             </div>
         </div>
     )
 }
 
-export default ConversationPage;
+export default VideoPage;

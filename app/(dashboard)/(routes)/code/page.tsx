@@ -3,7 +3,7 @@
 import axios from "axios"
 import * as z from "zod"
 import { Heading } from "@/components/heading";
-import { ChatBubbleIcon } from "@radix-ui/react-icons";
+import { ChatBubbleIcon, CodeIcon } from "@radix-ui/react-icons";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { formSchema } from "./constants";
@@ -18,8 +18,9 @@ import { Loader } from "@/components/loader";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/user-avatar";
 import { BotAvatar } from "@/components/bot-avatar";
+import ReactMarkdown from "react-markdown"
 
-const ConversationPage = () => {
+const CodePage = () => {
     const router = useRouter();
     const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
 
@@ -40,7 +41,7 @@ const ConversationPage = () => {
             };
             const newMessages = [...messages, userMessage];
             
-            const response = await axios.post("/api/conversation", {
+            const response = await axios.post("/api/code", {
                 messages: newMessages,
             });
 
@@ -58,11 +59,11 @@ const ConversationPage = () => {
     return (
         <div>
             <Heading 
-                title="Conversation"
-                description="The most expertly trained conversation model."
-                icon={ChatBubbleIcon}
-                iconColor="text-violet-500"
-                bgColor="bg-violet-500/10"
+                title="Code"
+                description="Generate Code with our expert model."
+                icon={CodeIcon}
+                iconColor="text-green-700"
+                bgColor="bg-green-700/10"
             />
             <div className="px-4 lg:px-8">
                 <div>
@@ -80,7 +81,7 @@ const ConversationPage = () => {
                                             <Input 
                                                 className="border-0 outline-none focus-visable:ring-0 focus-visible:ring-transparent"
                                                 disabled={isLoading}
-                                                placeholder="Give me 5 marketing ideas..."
+                                                placeholder="Ask me to create a complete snake game..."
                                                 {...field}
                                             />
                                         </FormControl>
@@ -100,7 +101,7 @@ const ConversationPage = () => {
                         </div>
                     )}
                     {messages.length === 0 && !isLoading && (
-                        <Empty label="No conversation started."/>
+                        <Empty label="No code requested."/>
                     )}
                     <div className="flex flex-col-reverse gap-y-4">
                         {messages.map((message) => (
@@ -111,10 +112,24 @@ const ConversationPage = () => {
                             )}
                             >
                                 {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-                                <p className="text-sm">
+                                
+                                <ReactMarkdown
+                                components={{
+                                    pre: ({ node, ...props}) => (
+                                        <div className="overflow-auto w-full my-2 bg-black/10 rounded-lg">
+                                            <pre {...props} />
 
-                                {message.content}
-                                </p>
+                                        </div>
+                                    ),
+                                    code: ({ node,  ...props }) => (
+                                        <code className="bg-black/10 rounded-lg p-1" {...props}/>
+                                    )
+                                }}
+                                className="text-sm overflow-hidden leading-7"
+                                
+                                >
+                                    {message.content || ""}
+                                </ReactMarkdown>
                             </div>
                         ))}
 
@@ -125,4 +140,4 @@ const ConversationPage = () => {
     )
 }
 
-export default ConversationPage;
+export default CodePage;
