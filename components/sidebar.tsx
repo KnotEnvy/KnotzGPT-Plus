@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
-import { ViewGridIcon, ChatBubbleIcon, ImageIcon, VideoIcon, SpeakerLoudIcon, CodeIcon, InfoCircledIcon  } from "@radix-ui/react-icons"
+import { ViewGridIcon, ChatBubbleIcon, ImageIcon, VideoIcon, SpeakerLoudIcon, CodeIcon, GearIcon  } from "@radix-ui/react-icons"
 import { usePathname } from "next/navigation"
 import { FreeCounter } from "@/components/free-counter";
 const montserrat = Montserrat({ weight: "600", subsets: ["latin"]});
@@ -49,18 +49,20 @@ const routes = [
     },
     {
     label: "Settings",
-    icon: InfoCircledIcon,
+    icon: GearIcon,
     href:"/settings",
 
     },
 ];
 
 interface SidebarProps {
-    apiLimitCount: number
+    apiLimitCount: number;
+    isPro: boolean;
 };
 
 const Sidebar = ({ 
-    apiLimitCount = 0
+    apiLimitCount = 0,
+    isPro= false,
 }: SidebarProps) => {
     const pathname = usePathname();
     return (
@@ -98,6 +100,7 @@ const Sidebar = ({
 
             </div>
             <FreeCounter 
+                isPro={isPro}
                 apiLimitCount={apiLimitCount}
             />
         </div>
