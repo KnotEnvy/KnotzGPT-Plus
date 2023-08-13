@@ -28,7 +28,7 @@ export const FreeCounter = ({
     if(!mounted) {
         return null;
     }
-    if(!isPro) {
+    if(isPro) {
         return null
     }
     

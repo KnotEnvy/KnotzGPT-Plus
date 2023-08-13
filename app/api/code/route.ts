@@ -4,6 +4,7 @@ import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 import fs from 'fs';
 
 import { increaseApiLimit, checkApiLimit } from "@/lib/api-limit";
+import { checkSubscription } from "@/lib/subscription";
 
 
 const configuration = new Configuration({
@@ -39,6 +40,7 @@ export async function POST(
             return new NextResponse("Messages are required", {status: 400 });
         }
         const freeTrial = await checkApiLimit();
+        const isPro = await checkSubscription()
 
         if (!freeTrial) {
             return new NextResponse("Free trial has expired.", {status: 403})
@@ -48,7 +50,10 @@ export async function POST(
             model:'gpt-3.5-turbo',
             messages: [instructionMessage, ...messages]
         });
-        await increaseApiLimit();
+        if(!isPro){
+
+            await increaseApiLimit();
+        }
 
         return NextResponse.json(response.data.choices[0].message);
 
