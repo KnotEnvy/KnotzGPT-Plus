@@ -3,7 +3,7 @@
 import axios from "axios"
 import * as z from "zod"
 import { Heading } from "@/components/heading";
-import { ChatBubbleIcon, CodeIcon } from "@radix-ui/react-icons";
+import { CodeIcon } from "@radix-ui/react-icons";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { formSchema } from "./constants";
