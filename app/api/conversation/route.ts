@@ -13,7 +13,7 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration)
 
-const personality = 'socraticTutor';
+const personality = 'cofounder';
 const content = fs.readFileSync(`./app/personalities/${personality}.txt`, 'utf-8');
 
 const instructionMessage: ChatCompletionRequestMessage = {
