@@ -1,16 +1,11 @@
+export const dynamic = 'force-dynamic';
+
 import { auth } from "@clerk/nextjs"
 import { NextResponse } from "next/server";
-import Replicate from "replicate"
+import { HfInference } from "@huggingface/inference";
 
 import { increaseApiLimit, checkApiLimit } from "@/lib/api-limit";
 import { checkSubscription } from "@/lib/subscription";
-
-
-const replicate = new Replicate({
-    auth: process.env.REPLICATE_API_TOKEN!
-})
-
-
 
 export async function POST(
     req: Request
@@ -23,33 +18,39 @@ export async function POST(
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
-        
+
         if (!prompt) {
-            return new NextResponse("Prompt is required", {status: 400 });
+            return new NextResponse("Prompt is required", { status: 400 });
         }
+        if (!process.env.HUGGING_FACE_ACCESS_TOKEN) {
+            return new NextResponse("Hugging Face Access Token not Configured", { status: 500 });
+        }
+
+        const hf = new HfInference(process.env.HUGGING_FACE_ACCESS_TOKEN);
+
         const freeTrial = await checkApiLimit();
         const isPro = await checkSubscription()
 
-        if (!freeTrial) {
-            return new NextResponse("Free trial has expired.", {status: 403})
+        if (!freeTrial && !isPro) {
+            return new NextResponse("Free trial has expired.", { status: 403 })
         }
 
-        const response = await replicate.run(
-            "anotherjesse/zeroscope-v2-xl:9f747673945c62801b13b84701c783929c0ee784e4748ec062204894dda1a351",
-            {
-              input: {
-                prompt
-              }
-            }
-          );
-            if(!isPro) {
+        const response = await (hf as any).textToVideo({
+            inputs: prompt,
+            model: "cerspense/zeroscope_v2_576w",
+        });
 
-                await increaseApiLimit();
-            }
-          
-        return NextResponse.json(response);
+        const buffer = await response.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString('base64');
+        const video = `data:video/mp4;base64,${base64}`;
 
-    } catch(error) {
+        if (!isPro) {
+            await increaseApiLimit();
+        }
+
+        return NextResponse.json([video]);
+
+    } catch (error) {
         console.log("[VIDEO_ERROR]", error);
         return new NextResponse("Internal error", { status: 500 });
     }

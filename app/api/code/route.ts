@@ -1,26 +1,12 @@
+export const dynamic = 'force-dynamic';
+
 import { auth } from "@clerk/nextjs"
 import { NextResponse } from "next/server";
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-import fs from 'fs';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 import { increaseApiLimit, checkApiLimit } from "@/lib/api-limit";
 import { checkSubscription } from "@/lib/subscription";
-
-
-const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration)
-
-const personality = 'codeGen';
-const content = fs.readFileSync(`./app/personalities/${personality}.txt`, 'utf-8');
-
-const instructionMessage: ChatCompletionRequestMessage = {
-    role: "system",
-    content: `${content}`
-}
-
+import { personalities } from "@/lib/personalities";
 
 export async function POST(
     req: Request
@@ -33,31 +19,55 @@ export async function POST(
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
-        if (!configuration.apiKey) {
-            return new NextResponse("OpenAI API Key not Configured", { status: 500 });
+        if (!process.env.GOOGLE_API_KEY) {
+            return new NextResponse("Google API Key not Configured", { status: 500 });
         }
         if (!messages) {
-            return new NextResponse("Messages are required", {status: 400 });
+            return new NextResponse("Messages are required", { status: 400 });
         }
+
+        const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+        const content = personalities.codeGen;
+
         const freeTrial = await checkApiLimit();
         const isPro = await checkSubscription()
 
-        if (!freeTrial) {
-            return new NextResponse("Free trial has expired.", {status: 403})
+        if (!freeTrial && !isPro) {
+            return new NextResponse("Free trial has expired.", { status: 403 })
         }
 
-        const response = await openai.createChatCompletion({
-            model:'gpt-3.5-turbo',
-            messages: [instructionMessage, ...messages]
-        });
-        if(!isPro){
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: content });
 
+        // Convert messages to Gemini format if needed, or just use the last message prompt
+        // Gemini chat history format: { role: "user" | "model", parts: [{ text: "..." }] }
+        // OpenAI format: { role: "user" | "assistant" | "system", content: "..." }
+
+        const chatHistory = messages.slice(0, -1).map((msg: any) => ({
+            role: msg.role === "assistant" ? "model" : "user",
+            parts: [{ text: msg.content }]
+        })).filter((msg: any) => msg.role !== "system"); // Filter out system messages as we use systemInstruction
+
+        const lastMessage = messages[messages.length - 1];
+
+        const chat = model.startChat({
+            history: chatHistory,
+            generationConfig: {
+                maxOutputTokens: 1000,
+            },
+        });
+
+        const result = await chat.sendMessage(lastMessage.content);
+        const response = result.response;
+        const text = response.text();
+
+        if (!isPro) {
             await increaseApiLimit();
         }
 
-        return NextResponse.json(response.data.choices[0].message);
+        // Return in OpenAI format for frontend compatibility
+        return NextResponse.json({ role: "assistant", content: text });
 
-    } catch(error) {
+    } catch (error) {
         console.log("[CODE_ERROR]", error);
         return new NextResponse("Internal error", { status: 500 });
     }

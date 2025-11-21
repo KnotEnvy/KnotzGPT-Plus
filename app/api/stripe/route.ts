@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { auth, currentUser } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 
@@ -5,14 +7,13 @@ import prismadb from "@/lib/prismadb";
 import { stripe } from "@/lib/stripe"
 import { absoluteUrl } from "@/lib/utils";
 
-const settingsUrl = absoluteUrl("/settings")
-
 export async function GET() {
-    try{
-        const {userId } = auth();
+    try {
+        const settingsUrl = absoluteUrl("/settings")
+        const { userId } = auth();
         const user = await currentUser();
 
-        if(!userId || !user) {
+        if (!userId || !user) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
@@ -22,7 +23,7 @@ export async function GET() {
             }
         });
 
-        if(userSubscription && userSubscription.stripeCustomerId){
+        if (userSubscription && userSubscription.stripeCustomerId) {
             const stripeSession = await stripe.billingPortal.sessions.create({
                 customer: userSubscription.stripeCustomerId,
                 return_url: settingsUrl,
